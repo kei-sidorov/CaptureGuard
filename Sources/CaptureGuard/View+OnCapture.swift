@@ -38,8 +38,8 @@ public struct HiddenOnCaptureModifier: ViewModifier {
 	public func body(content: Content) -> some View {
 		content.mask {
 			ZStack {
-				Color.white
-				//HiddenOnCaptureColorView(color: .white)
+				Color.black
+				HiddenOnCaptureColorView(color: .white)
 			}
 			.compositingGroup()
 			.luminanceToAlpha()
