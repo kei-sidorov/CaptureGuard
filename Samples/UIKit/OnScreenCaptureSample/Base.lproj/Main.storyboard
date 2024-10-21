@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="OnScreenCaptureSample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="2i3-x0-e7U">
+                                <rect key="frame" x="76.666666666666686" y="298" width="240" height="256"/>
+                                <subviews>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0hY-Ds-JPJ" customClass="HiddenOnCaptureView" customModule="CaptureGuardUIKit">
+                                        <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hidden on capture" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jqk-Df-Xws">
+                                                <rect key="frame" x="10" y="5" width="220" height="118"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <constraints>
+                                            <constraint firstItem="jqk-Df-Xws" firstAttribute="leading" secondItem="0hY-Ds-JPJ" secondAttribute="leading" constant="10" id="R7x-45-EWR"/>
+                                            <constraint firstAttribute="trailing" secondItem="jqk-Df-Xws" secondAttribute="trailing" constant="10" id="VfS-Nl-7GS"/>
+                                            <constraint firstAttribute="bottom" secondItem="jqk-Df-Xws" secondAttribute="bottom" constant="5" id="jdV-c0-LPE"/>
+                                            <constraint firstItem="jqk-Df-Xws" firstAttribute="top" secondItem="0hY-Ds-JPJ" secondAttribute="top" constant="5" id="wVe-4g-tSt"/>
+                                        </constraints>
+                                    </view>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fYB-o1-kxq" customClass="VisibleOnlyOnCaptureView" customModule="CaptureGuardUIKit">
+                                        <rect key="frame" x="0.0" y="128" width="240" height="128"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Visible only on capture" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qJ8-i0-Hwr">
+                                                <rect key="frame" x="10" y="5" width="220" height="118"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <constraints>
+                                            <constraint firstItem="qJ8-i0-Hwr" firstAttribute="leading" secondItem="fYB-o1-kxq" secondAttribute="leading" constant="10" id="3ie-gP-Ft6"/>
+                                            <constraint firstItem="qJ8-i0-Hwr" firstAttribute="top" secondItem="fYB-o1-kxq" secondAttribute="top" constant="5" id="6k1-WQ-9Gn"/>
+                                            <constraint firstAttribute="trailing" secondItem="qJ8-i0-Hwr" secondAttribute="trailing" constant="10" id="F0P-u3-8Kx"/>
+                                            <constraint firstAttribute="bottom" secondItem="qJ8-i0-Hwr" secondAttribute="bottom" constant="5" id="wsG-Kz-f8c"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                            </stackView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="2i3-x0-e7U" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="XeH-ZO-q1h"/>
+                            <constraint firstItem="2i3-x0-e7U" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="fCW-nd-qqN"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="stackView" destination="2i3-x0-e7U" id="g3S-DO-Ojl"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="104.58015267175573" y="-2.1126760563380285"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
