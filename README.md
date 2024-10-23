@@ -2,6 +2,8 @@
 
 This Swift Package helps developers hide or show parts of the screen when a screenshot or screen recording is taken on iOS devices, like iPhones and iPads. It works with both **SwiftUI** and **UIKit** frameworks.
 
+Check out the [full article for a detailed explanation](https://sidorov.tech/en/all/mastering-screen-recording-detection-in-ios-apps/) of how this library works.
+
 ## Disclaimer
 
 The authors of this package take **no responsibility** for any issues or consequences arising from its use. The code is provided **as-is**, and there is no guarantee that it will function as intended, especially with future updates to iOS.
