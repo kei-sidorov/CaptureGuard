@@ -21,14 +21,22 @@ public final class CaptureMonitor: ObservableObject {
 	/// mirroring as a capture. The guess is undocumented and may break on an iOS release.
 	public var detectsMirroring: Bool = true {
 		didSet {
-			if !detectsMirroring { hasSeenMirroring = false }
+			if !detectsMirroring {
+				hasSeenMirroring = false
+				mirroringMouse = nil
+				isAwaitingDisplayOnAfterMouseDisconnect = false
+				ignoresDisplayStatusAfterMouseDisconnect = false
+			}
 			refresh()
 		}
 	}
 
 	private var observers: [NSObjectProtocol] = []
-	private let protectedViews = NSMapTable<UIView, NSNumber>.weakToStrongObjects()
+	private let protectedViews = NSHashTable<UIView>.weakObjects()
 	private var hasSeenMirroring = false
+	private var mirroringMouse: GCMouse?
+	private var isAwaitingDisplayOnAfterMouseDisconnect = false
+	private var ignoresDisplayStatusAfterMouseDisconnect = false
 	private var isActive = true
 	private var displayStatus: DarwinNotification?
 
@@ -46,7 +54,7 @@ public final class CaptureMonitor: ObservableObject {
 			.GCMouseDidDisconnect
 		]
 		observers = names.map { name in
-			NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+			NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] notification in
 				MainActor.assumeIsolated {
 					guard let self else { return }
 					switch name {
@@ -60,28 +68,43 @@ public final class CaptureMonitor: ObservableObject {
 					}
 					if name == UIApplication.didEnterBackgroundNotification {
 						self.hasSeenMirroring = false
+						self.mirroringMouse = nil
+						self.isAwaitingDisplayOnAfterMouseDisconnect = false
+						self.ignoresDisplayStatusAfterMouseDisconnect = false
+					}
+					if name == .GCMouseDidDisconnect {
+						self.handleMirroringMouseDisconnect(notification)
 					}
 					self.refresh()
 				}
 			}
 		}
 		displayStatus = DarwinNotification("com.apple.iokit.hid.displayStatus") { [weak self] in
-			MainActor.assumeIsolated { self?.refresh() }
+			MainActor.assumeIsolated {
+				guard let self else { return }
+				if self.isAwaitingDisplayOnAfterMouseDisconnect,
+				   self.displayStatus?.state == 1 {
+					self.hasSeenMirroring = false
+					self.isAwaitingDisplayOnAfterMouseDisconnect = false
+					self.ignoresDisplayStatusAfterMouseDisconnect = true
+				}
+				self.refresh()
+			}
 		}
 
 		refresh()
 	}
 
 	func hideWhileCapturing(_ view: UIView) {
-		guard protectedViews.object(forKey: view) == nil else { return }
-		protectedViews.setObject(NSNumber(value: Double(view.alpha)), forKey: view)
-		if isHidingContent { view.alpha = 0 }
+		protectedViews.add(view)
+		if isHidingContent, view.captureGuardPreviousAlpha == nil {
+			view.captureGuardPreviousAlpha = view.alpha
+			view.alpha = 0
+		}
 	}
 
 	public func refresh() {
-		if detectsMirroring && looksLikeMirroring() {
-			hasSeenMirroring = true
-		}
+		refreshMirroringState()
 		let capturing = isSystemCapturing || (detectsMirroring && hasSeenMirroring)
 		let hiding = capturing || !isActive
 
@@ -92,15 +115,51 @@ public final class CaptureMonitor: ObservableObject {
 		isHidingContent = hiding
 
 		guard hiding || changed else { return }
-		let views = protectedViews.keyEnumerator().allObjects.compactMap { $0 as? UIView }
-		for view in views {
+		for view in protectedViews.allObjects {
 			if hiding {
-				guard view.alpha != 0 else { continue }
-				protectedViews.setObject(NSNumber(value: Double(view.alpha)), forKey: view)
+				if changed || view.captureGuardPreviousAlpha == nil || view.alpha != 0 {
+					view.captureGuardPreviousAlpha = view.alpha
+				}
 				view.alpha = 0
-			} else if view.alpha == 0, let alpha = protectedViews.object(forKey: view) {
-				view.alpha = CGFloat(alpha.doubleValue)
+			} else if changed, let alpha = view.captureGuardPreviousAlpha {
+				view.alpha = alpha
+				view.captureGuardPreviousAlpha = nil
 			}
+		}
+	}
+
+	private func refreshMirroringState() {
+		guard detectsMirroring, isActive else { return }
+
+		let mouse = GCMouse.mice().first {
+			$0.vendorName?.contains(mirroringMouseName) == true
+		}
+		if let mouse {
+			hasSeenMirroring = true
+			mirroringMouse = mouse
+			isAwaitingDisplayOnAfterMouseDisconnect = false
+			ignoresDisplayStatusAfterMouseDisconnect = false
+		} else if isAwaitingDisplayOnAfterMouseDisconnect {
+			hasSeenMirroring = true
+		} else if !ignoresDisplayStatusAfterMouseDisconnect && looksLikeMirroring() {
+			hasSeenMirroring = true
+		}
+	}
+
+	private func handleMirroringMouseDisconnect(_ notification: Notification) {
+		guard let disconnectedMouse = notification.object as? GCMouse,
+			  let observedMouse = mirroringMouse,
+			  disconnectedMouse === observedMouse,
+			  disconnectedMouse.vendorName?.contains(mirroringMouseName) == true else { return }
+
+		// Keep hiding while the display is still off; a fresh screen-on state confirms the end.
+		self.mirroringMouse = nil
+		ignoresDisplayStatusAfterMouseDisconnect = true
+		if displayStatus?.state == 1 {
+			hasSeenMirroring = false
+		} else {
+			hasSeenMirroring = true
+			isAwaitingDisplayOnAfterMouseDisconnect = true
 		}
 	}
 
@@ -117,11 +176,6 @@ public final class CaptureMonitor: ObservableObject {
 		return false
 		#else
 		guard isActive else { return false }
-
-		// Mirroring gives the phone the Mac's pointer as a virtual mouse that says so.
-		if GCMouse.mice().contains(where: { $0.vendorName?.contains(mirroringMouseName) == true }) {
-			return true
-		}
 
 		// Or the panel being dark while the app is in front.
 		if let isDisplayOn = displayStatus?.state, isDisplayOn == 0 { return true }

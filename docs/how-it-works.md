@@ -31,8 +31,10 @@ flowchart TD
     M2 --> R2["screen recording · AirPlay<br/>Mac-side recording · iPhone Mirroring"]
 ```
 
-`CaptureMonitor` keeps the views in an `NSMapTable`, weakly, each with the alpha it had.
-When hiding starts it sets `alpha` to 0 on each one; when it ends it puts the old value back.
+`CaptureMonitor` keeps registered views weakly. Each view has a computed property backed by
+an associated object for the alpha saved when hiding starts. The monitor sets `alpha` to 0,
+then restores and clears the saved value when hiding ends. A saved value of `0` is preserved
+too.
 
 ## 1. The layer exclusion
 
@@ -60,6 +62,9 @@ The change from `false` to `true` is what does the work. iOS marks whichever lay
 inside the field at that moment, and at that moment it is yours. The field stays secure
 after the first call, so setting `true` again would change nothing. That is why the code
 sets `false` first.
+
+The KVC calls use the public key-value coding API. The dependency that can change is the
+secure text field's internal canvas view and its role in capture rendering.
 
 To check it worked, on a device:
 
@@ -118,17 +123,21 @@ there, because nothing is capturing — the two states are tracked separately.
 `isCaptured` is true for screen recording, AirPlay, and a recording started on a connected
 Mac. It is false for iPhone Mirroring — see [iPhone Mirroring](#iphone-mirroring) below.
 
-While the app is in front, `hasSeenMirroring` only goes one way:
+While the app is in front, `hasSeenMirroring` latches when detection relies on the display
+status signal. When the named mirroring mouse was seen, only a disconnect notification for
+that same `GCMouse` instance can end the latch. Disconnects from other mice and trackpads do
+not affect it.
+Going to the background resets it in either case:
 
 ```mermaid
 stateDiagram-v2
     direction LR
     [*] --> NotSeen
     NotSeen --> Seen: app active && (mirroring mouse || displayStatus == 0)
-    Seen --> NotSeen: UIApplication.didEnterBackgroundNotification
+    Seen --> NotSeen: observed mouse disconnect && displayStatus == 1 OR didEnterBackground
     note right of Seen
         hasSeenMirroring == true
-        isCapturing stays true even if the signal goes away
+        displayStatus-only detection stays latched until background
     end note
 ```
 
@@ -140,10 +149,21 @@ is happening. It is there from the moment the session starts, before anyone clic
 `notify_get_state`. `0` means the phone's own screen is off. An app is only in front with
 the screen off when something else is driving it.
 
-It has to go one way. During mirroring you can press the power button: the screen turns
-on, `displayStatus` becomes `1`, and the Mac keeps streaming. If the code checked again at
-that moment it would show the content. Going to the background is the one thing a
-mirroring session cannot survive, so that is the only thing that resets the flag.
+The display-status fallback has to latch. During mirroring you can press the power button:
+the screen turns on, `displayStatus` becomes `1`, and the Mac keeps streaming. If the code
+checked only that signal again, it would show the content. When the named mouse is detected,
+its `GCMouseDidDisconnect` notification provides an end signal. The monitor checks that
+the notification's `GCMouse` object is the same instance it previously observed with a
+`vendorName` containing `iPhone Mirroring`. Disconnects from other mice do not affect the
+latch. If the phone display is still off or its state is unknown, the monitor keeps content
+hidden until a fresh display-status notification reports that the display is on. A matching
+mouse reconnect cancels that wait. If the matching disconnect notification is missed, the
+latch remains until the app goes to the background.
+
+There is no public API that reports the mirroring session itself. If iOS removed the named
+mouse while mirroring continued with the phone display on, that state is indistinguishable
+from a session that ended; this heuristic would show the content. Device measurements so far
+show the named mouse remains connected for the whole session.
 
 `refresh()` runs on six `UIApplication` and `UIScreen` notifications, plus the
 `displayStatus` callback. It never polls. If one of those is missed, `isCapturing` stays
@@ -278,8 +298,7 @@ flowchart TB
 
     subgraph UND["Not documented — can change in any iOS release"]
         subgraph A["CaptureGuard"]
-            U1["'LayoutCanvasView'<br/>Core/CALayer+HiddenOnCapture.swift:15"]
-            U2["KVC key 'layer'<br/>Core/CALayer+HiddenOnCapture.swift:18,21"]
+            U1["Internal text-field canvas view<br/>Core/CALayer+HiddenOnCapture.swift:15"]
             U3["'com.apple.iokit.hid.displayStatus'<br/>Monitor/CaptureMonitor.swift:68"]
             U7["'iPhone Mirroring' mouse name<br/>Monitor/CaptureMonitor.swift:113"]
         end

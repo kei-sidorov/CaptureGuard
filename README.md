@@ -9,7 +9,7 @@ Check out the [full article for a detailed explanation](https://sidorov.tech/en/
 The authors of this package take **no responsibility** for any issues or consequences arising from its use. The code is provided **as-is**, and there is no guarantee that it will function as intended, especially with future updates to iOS.
 
 **Important Notes:**
-- The **SwiftUI** implementation is believed to be relatively safe for App Store submission. It uses public API, plus two undocumented names for iPhone Mirroring detection — a notification name and a device name. Care should be taken with each iOS update to ensure that nothing breaks.
+- The **SwiftUI** implementation is believed to be relatively safe for App Store submission. It uses public KVC with a secure text field, but depends on that field's undocumented internal canvas view. iPhone Mirroring detection also relies on two undocumented names — a notification name and a device name. Care should be taken with each iOS update to ensure that nothing breaks.
 - The **UIKit** implementation (`CaptureGuardUIKit`) utilizes certain private framework symbols, which may lead to rejection from the App Store. It is recommended to use this package as a reference and consider enforcing similar functionality via alternative approaches.
 
 **Compatibility**
@@ -29,6 +29,9 @@ The authors of this package take **no responsibility** for any issues or consequ
 | Screen recording started on a Mac | ✅ | capture monitor |
 | iPhone Mirroring | ⚠️ | inferred, not reported — see [docs/how-it-works.md](docs/how-it-works.md#iphone-mirroring) |
 | iOS Simulator | partly | the layer mark and `isCaptured` are inert; hiding while inactive still works |
+
+> [!WARNING]
+> iPhone Mirroring detection is an undocumented workaround, not guaranteed protection; it may break with any iOS update. In UIKit, CaptureGuard saves a view's `alpha` before setting it to `0`, but cannot observe later `alpha` changes, which may reveal the view. Screenshot and recording protection uses a separate layer-exclusion mechanism.
 
 ## Installation
 

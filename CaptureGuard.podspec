@@ -5,8 +5,9 @@ Pod::Spec.new do |s|
 
   s.description  = <<~DESC
     Hides views from screenshots by borrowing the capture exclusion iOS grants a secure
-    UITextField, and from screen recordings, AirPlay and iPhone Mirroring by observing
-    capture state. Works with SwiftUI and UIKit, and uses public API only.
+    UITextField and using public KVC to work with its layer. This depends on the text
+    field's undocumented internal canvas view. Screen recordings, AirPlay and iPhone
+    Mirroring are handled by observing capture state. Works with SwiftUI and UIKit.
   DESC
 
   s.homepage     = 'https://github.com/kei-sidorov/CaptureGuard'
