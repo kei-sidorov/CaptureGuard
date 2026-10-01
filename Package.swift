@@ -13,7 +13,8 @@ let package = Package(
         .library(name: "CaptureGuardUIKit", targets: ["CaptureGuardUIKit"])
     ],
     targets: [
-        .target(name: "CaptureGuard", dependencies: []),
+        .target(name: "CNotify"),
+        .target(name: "CaptureGuard", dependencies: ["CNotify"]),
         .target(name: "CaptureGuardUIKit", dependencies: ["CaptureGuard"])
     ]
 )

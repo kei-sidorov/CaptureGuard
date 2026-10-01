@@ -1,5 +1,5 @@
 //
-//  UIView+VisibleOnlyOnCapture.swift
+//  VisibleOnlyOnCaptureView.swift
 //
 //  Created by Kirill Sidorov on 20.10.2024.
 //
@@ -27,8 +27,9 @@ open class VisibleOnlyOnCaptureView: UIView {
 		let layer = CALayer()
 		layer.addSublayer(whiteLayer)
 		layer.addSublayer(blackLayer)
-		if let filter = LayerFilterFactory.makeFilter(.luminanceToAlpha) {
-			layer.perform(Selector(("setFilters:")), with: [filter])
+		let setFilters = NSSelectorFromString("setFilters:")
+		if let filter = LayerFilterFactory.makeFilter(.luminanceToAlpha), layer.responds(to: setFilters) {
+			layer.perform(setFilters, with: [filter])
 		}
 		return layer
 	}()
@@ -49,19 +50,4 @@ open class VisibleOnlyOnCaptureView: UIView {
 		whiteLayer.frame = bounds
 		blackLayer.frame = bounds
 	}
-}
-
-/// UIView that is hidden on screen capture on screenshots
-open class HiddenOnCaptureView: UIView {
-	
-	public override init(frame: CGRect) {
-		super.init(frame: frame)
-		layer.makeHiddenOnCapture()
-	}
-	
-	public required init?(coder: NSCoder) {
-		super.init(coder: coder)
-		layer.makeHiddenOnCapture()
-	}
-	
 }

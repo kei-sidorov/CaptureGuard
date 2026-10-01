@@ -14,7 +14,7 @@ enum LayerFilterFactory {
 
 	static func makeFilter(_ filter: LayerFilter) -> NSObject? {
 		guard let filterClass: AnyClass = NSClassFromString("CAFilter") else { return nil }
-		let selector = Selector("filterWithName:")
+		let selector = NSSelectorFromString("filterWithName:")
 		typealias Function = @convention(c) (AnyClass, Selector, String) -> AnyObject?
 		
 		guard let filterWithName = class_getClassMethod(filterClass, selector) else { return nil }

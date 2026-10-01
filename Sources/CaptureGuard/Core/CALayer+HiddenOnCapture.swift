@@ -1,5 +1,5 @@
 //
-//  CALayer+HideOnCapture.swift
+//  CALayer+HiddenOnCapture.swift
 //
 //  Created by Kirill Sidorov on 20.10.2024.
 //
