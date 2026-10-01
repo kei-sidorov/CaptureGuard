@@ -157,8 +157,11 @@ the notification's `GCMouse` object is the same instance it previously observed 
 `vendorName` containing `iPhone Mirroring`. Disconnects from other mice do not affect the
 latch. If the phone display is still off or its state is unknown, the monitor keeps content
 hidden until a fresh display-status notification reports that the display is on. A matching
-mouse reconnect cancels that wait. If the matching disconnect notification is missed, the
-latch remains until the app goes to the background.
+mouse reconnect cancels that wait. Once the display is confirmed on, or if it was already
+on when the mouse disconnected, the display-status fallback is available for a later
+session. An ordinary screen-on event while the mouse is connected does not clear the latch.
+If the matching disconnect notification is missed, the latch remains until the app goes to
+the background.
 
 There is no public API that reports the mirroring session itself. If iOS removed the named
 mouse while mirroring continued with the phone display on, that state is indistinguishable

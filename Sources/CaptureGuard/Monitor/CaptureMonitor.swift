@@ -86,7 +86,7 @@ public final class CaptureMonitor: ObservableObject {
 				   self.displayStatus?.state == 1 {
 					self.hasSeenMirroring = false
 					self.isAwaitingDisplayOnAfterMouseDisconnect = false
-					self.ignoresDisplayStatusAfterMouseDisconnect = true
+					self.ignoresDisplayStatusAfterMouseDisconnect = false
 				}
 				self.refresh()
 			}
@@ -154,12 +154,13 @@ public final class CaptureMonitor: ObservableObject {
 
 		// Keep hiding while the display is still off; a fresh screen-on state confirms the end.
 		self.mirroringMouse = nil
-		ignoresDisplayStatusAfterMouseDisconnect = true
 		if displayStatus?.state == 1 {
 			hasSeenMirroring = false
+			ignoresDisplayStatusAfterMouseDisconnect = false
 		} else {
 			hasSeenMirroring = true
 			isAwaitingDisplayOnAfterMouseDisconnect = true
+			ignoresDisplayStatusAfterMouseDisconnect = true
 		}
 	}
 
